@@ -61,7 +61,7 @@ window.addEventListener("load", () => {
       this.particles = [];
       this.gap = 3;
       this.mouse = {
-        redius: 20000,
+        radius: 20000,
         x: 0,
         y: 0,
       };
@@ -131,6 +131,8 @@ window.addEventListener("load", () => {
         this.canvasWidth,
         this.canvasHeight
       ).data;
+      console.log(pixels);
+      console.log(this.context);
       this.context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 
       for (let y = 0; y < this.canvasHeight; y += this.gap) {
