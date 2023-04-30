@@ -1,6 +1,6 @@
 window.addEventListener("load", () => {
   const canvas = document.getElementById("canvas1");
-  const context = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d");
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
@@ -16,7 +16,7 @@ window.addEventListener("load", () => {
       this.dx = 0;
       this.dy = 0;
       this.vx = 0;
-      this.dy = 0;
+      this.vy = 0;
       this.force = 0;
       this.angle = 0;
       this.distance = 0;
@@ -25,19 +25,24 @@ window.addEventListener("load", () => {
     }
     draw() {
       this.effect.context.fillStyle = this.color;
-      this.effect.context.fillRect(
-        this.originX,
-        this.originY,
-        this.size,
-        this.size
-      );
+      this.effect.context.fillRect(this.x, this.y, this.size, this.size);
     }
     update() {
       this.dx = this.effect.mouse.x - this.x;
       this.dy = this.effect.mouse.y - this.y;
       this.distance = this.dx * this.dx + this.dy * this.dy;
-      this.x += (this.originX - this.x) * this.ease;
-      this.y += (this.originY - this.y) * this.ease;
+      this.force = this.effect.mouse.radius / this.distance;
+
+      if (this.distance < this.effect.mouse.radius) {
+        this.angle = Math.atan2(this.dy, this.dx);
+        this.vx += this.force * Math.cos(this.angle);
+        this.vy += this.force * Math.sin(this.angle);
+      }
+
+      this.x +=
+        (this.vx *= this.friction) + (this.originX - this.x) * this.ease;
+      this.y +=
+        (this.vy *= this.friction) + (this.originY - this.y) * this.ease;
     }
   }
 
@@ -88,7 +93,7 @@ window.addEventListener("load", () => {
       this.context.textBaseline = "middle";
       this.context.lineWidth = 3;
       this.context.strokeStyle = "red";
-      this.context.font = this.fontSize + "px Helvetica";
+      this.context.font = this.fontSize + "px Impact";
 
       let linesArray = [];
       let words = text.split(" ");
@@ -121,6 +126,7 @@ window.addEventListener("load", () => {
           this.textY + index * this.lineHeight
         );
       });
+      this.convertToParticles();
     }
 
     convertToParticles() {
@@ -131,8 +137,7 @@ window.addEventListener("load", () => {
         this.canvasWidth,
         this.canvasHeight
       ).data;
-      console.log(pixels);
-      console.log(this.context);
+
       this.context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 
       for (let y = 0; y < this.canvasHeight; y += this.gap) {
@@ -143,7 +148,7 @@ window.addEventListener("load", () => {
             const red = pixels[index];
             const green = pixels[index + 1];
             const blue = pixels[index + 2];
-            const color = `rgb(${red},${green},${blue})`;
+            const color = "rgb(" + red + "," + green + "," + blue + ")";
             this.particles.push(new Particle(this, x, y, color));
           }
         }
@@ -158,16 +163,13 @@ window.addEventListener("load", () => {
     }
   }
 
-  const effect = new Effect(context, canvas.width, canvas.height);
+  const effect = new Effect(ctx, canvas.width, canvas.height);
 
-  effect.wrapText(
-    "Hallo! Type something... and swipe the mouse through the letters "
-  );
+  effect.wrapText("Hallo! Type something...");
 
   effect.render();
 
   function animate() {
-    context.clearRect(0, 0, canvas.width, canvas.height);
     effect.render();
     requestAnimationFrame(animate);
   }
