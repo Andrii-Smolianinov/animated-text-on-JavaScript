@@ -1,6 +1,8 @@
 window.addEventListener("load", () => {
   const canvas = document.getElementById("canvas1");
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d", {
+    willReadFrequently: true,
+  });
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
@@ -20,8 +22,8 @@ window.addEventListener("load", () => {
       this.force = 0;
       this.angle = 0;
       this.distance = 0;
-      this.friction = Math.random() * 0.6 + 0.15;
-      this.ease = Math.random() * 0.1 + 0.005;
+      this.friction = Math.random() * 0.6 + 0.2;
+      this.ease = Math.random() * 0.2 + 0.005;      
     }
     draw() {
       this.effect.context.fillStyle = this.color;
@@ -38,7 +40,6 @@ window.addEventListener("load", () => {
         this.vx += this.force * Math.cos(this.angle);
         this.vy += this.force * Math.sin(this.angle);
       }
-
       this.x +=
         (this.vx *= this.friction) + (this.originX - this.x) * this.ease;
       this.y +=
@@ -53,10 +54,11 @@ window.addEventListener("load", () => {
       this.canvasHeight = canvasHeight;
       this.textX = this.canvasWidth / 2;
       this.textY = this.canvasHeight / 2;
-      this.fontSize = 130;
-      this.lineHeight = this.fontSize * 0.9;
-      this.maxTextWidth = this.canvasWidth * 0.8;
+      this.fontSize = 200;
+      this.lineHeight = this.fontSize * 0.8;
+      this.maxTextWidth = this.canvasWidth * 0.7;
       this.textInput = document.getElementById("textInput");
+      this.verticalOffset = 0;
       this.textInput.addEventListener("keyup", (event) => {
         if (event.key !== " ") {
           this.context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
@@ -76,24 +78,17 @@ window.addEventListener("load", () => {
         this.mouse.y = event.y;
       });
     }
-
-    wrapText(text) {
-      const gradient = this.context.createLinearGradient(
-        0,
-        0,
-        this.canvasWidth,
-        this.canvasHeight
-      );
-
+    wrapText(text) {      
+      const gradient = this.context.createLinearGradient(0, 0, this.canvasWidth, this.canvasHeight);
       gradient.addColorStop(0.3, "red");
       gradient.addColorStop(0.5, "yellow");
       gradient.addColorStop(0.6, "blue");
       this.context.fillStyle = gradient;
       this.context.textAlign = "center";
-      this.context.textBaseline = "middle";
+      this.context.textBaseline = "bottom";
       this.context.lineWidth = 3;
-      this.context.strokeStyle = "red";
-      this.context.font = this.fontSize + "px Impact";
+      this.context.strokeStyle = "lime";
+      this.context.font = this.fontSize + "px Sigmar";
 
       let linesArray = [];
       let words = text.split(" ");
@@ -128,7 +123,6 @@ window.addEventListener("load", () => {
       });
       this.convertToParticles();
     }
-
     convertToParticles() {
       this.particles = [];
       const pixels = this.context.getImageData(
@@ -153,7 +147,6 @@ window.addEventListener("load", () => {
           }
         }
       }
-      console.log(this.particles);
     }
     render() {
       this.particles.forEach((particle) => {
@@ -161,17 +154,32 @@ window.addEventListener("load", () => {
         particle.draw();
       });
     }
+    resize(width, height) {
+      this.canvasWidth = width;
+      this.canvasHeight = height;
+      this.textX = this.canvasWidth / 2;
+      this.textY = this.canvasHeight / 2;
+      this.maxTextWidth = this.canvasWidth * 0.8;
+    }
   }
 
   const effect = new Effect(ctx, canvas.width, canvas.height);
 
-  effect.wrapText("Hallo! Type something...");
+  effect.wrapText(effect.textInput.value);
 
   effect.render();
 
   function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     effect.render();
     requestAnimationFrame(animate);
   }
   animate();
+
+  window.addEventListener("resize", function () {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    effect.resize(canvas.width, canvas.height);
+    effect.wrapText(effect.textInput.value);
+  });
 });
